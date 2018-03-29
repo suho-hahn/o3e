@@ -19,7 +19,7 @@ func TestTaskWrap_NormalExecution(t *testing.T) {
 
     stopCh := make(chan bool)
 
-    w := newTaskWrap(task, stopCh)
+    w := newTaskWrapper(task, stopCh)
     exNumGo, curNumGo := 0, runtime.NumGoroutine()
 
     assertEqual(t, task.ExecCount, 0)
@@ -67,7 +67,7 @@ func TestTaskWrap_Interrupt(t *testing.T) {
 
     stopCh := make(chan bool)
 
-    w := newTaskWrap(task, stopCh)
+    w := newTaskWrapper(task, stopCh)
     exNumGo, curNumGo := 0, runtime.NumGoroutine()
 
     assertEqual(t, task.ExecCount, 0)

@@ -11,7 +11,7 @@ type Task interface {
     Execute()
 }
 
-type taskWrap struct {
+type taskWrappper struct {
     Task
     deps   map[int]bool //memoizatiojn
     waitCount int32
@@ -19,11 +19,11 @@ type taskWrap struct {
     stopCh chan bool
 }
 
-func newTaskWrap(t Task, stopCh chan bool) *taskWrap {
+func newTaskWrapper(t Task, stopCh chan bool) *taskWrappper {
 
     deps := t.DepFactors()
 
-    result := &taskWrap{
+    result := &taskWrappper{
         t,
         deps,
         int32(len(deps)),
@@ -35,7 +35,7 @@ func newTaskWrap(t Task, stopCh chan bool) *taskWrap {
 
 }
 
-func (w *taskWrap) execute() {
+func (w *taskWrappper) execute() {
     if atomic.AddInt32(&w.waitCount, -1) != 0 {
         select {
         case <-w.stopCh:
@@ -47,7 +47,7 @@ func (w *taskWrap) execute() {
     }
 }
 
-func (w *taskWrap) done() {
+func (w *taskWrappper) done() {
     for i:=0; i<len(w.deps) - 1; i++ {
         w.doneCh <- true
     }
