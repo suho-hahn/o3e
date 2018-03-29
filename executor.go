@@ -40,7 +40,7 @@ func (e *Executor) Stop() {
 // Thread **UNSAFE**
 func (e *Executor) AddTask(t Task) {
 
-    wrap := newTaskWrapper(t, e.stopCh)
+    wrap := newTaskWrapper(t)
 
     for depFactor := range wrap.deps {
         e.channels[depFactor % len(e.channels)] <- wrap
