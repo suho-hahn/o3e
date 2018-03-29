@@ -1,14 +1,14 @@
 package o3e
 
 import (
-    "fmt"
     "testing"
 )
 
 type PrintTask struct {
-    Deps map[int]bool
-    Str string
+    Deps      map[int]bool
+    Str       string
     ExecCount int
+    Test      *testing.T
 }
 
 func (t *PrintTask) DepFactors() map[int]bool {
@@ -16,13 +16,14 @@ func (t *PrintTask) DepFactors() map[int]bool {
 }
 
 func (t *PrintTask) Execute() {
-    fmt.Println(t.Str)
+    t.Test.Log(t.Str)
     t.ExecCount ++
 }
 
 // copied from https://gist.github.com/samalba/6059502#gistcomment-2331327
 func assertEqual(t *testing.T, a interface{}, b interface{}) {
+    t.Log("assertEqual", a, b)
     if a != b {
-        t.Fatalf("%s != %s", a, b)
+        t.Fatalf("%v != %v", a, b)
     }
 }

@@ -1,58 +1,76 @@
 package o3e
 
 import (
-
+    "sync/atomic"
 )
 
 type Executor struct {
-    queueList []chan *taskWrap
-    nextFetchId int64
-    nextCommitId int64
-
+    channels []chan *taskWrap
+    stopCh   chan bool
+    numGoroutine int32
 }
 
-func NewExecutor(queueListSize, queueSize int) *Executor {
+func NewExecutor(numOfChannels, channelCapacity int) *Executor {
 
-    queueList := make([]chan *taskWrap, queueListSize)
-    for i := range queueList {
-        queueList[i] = make(chan *taskWrap, queueSize)
+    channels := make([]chan *taskWrap, numOfChannels)
+    for i := range channels {
+        channels[i] = make(chan *taskWrap, channelCapacity)
     }
 
     return &Executor {
-        queueList,
-        0,
+        channels,
+        make(chan bool),
         0,
     }
 
 }
 
 func (e *Executor) Start() {
-    // TODO
+
+    for i := range e.channels {
+        go e.handleQueueAsync(i)
+        atomic.AddInt32(&e.numGoroutine, 1)
+    }
 }
 
 func (e *Executor) Stop() {
-    // TODO
+    e.stopCh <- true
 }
 
 // Thread **UNSAFE**
 func (e *Executor) AddTask(t Task) {
 
-    wrap := newTaskWrap(t)
-
+    wrap := newTaskWrap(t, e.stopCh)
 
     for depFactor := range wrap.deps {
-        e.queueList[depFactor % len(e.queueList)] <- wrap
+        e.channels[depFactor % len(e.channels)] <- wrap
     }
 
 }
 
-func (e *Executor) handleQueueAsync(queueIndex int) {
+func (e *Executor) handleQueueAsync(chIdx int) {
 
-    ch := e.queueList[queueIndex]
+    ch := e.channels[chIdx]
 
     for {
-        wrap := <- ch
-        wrap.execute()
+
+        select {
+        case <- e.stopCh:
+            goto STOP
+        default:
+        }
+
+        select {
+        case wrap := <- ch:
+            wrap.execute()
+        case <- e.stopCh:
+            e.stopCh <- true
+            goto STOP
+        }
+
     }
+
+    STOP:
+    atomic.AddInt32(&e.numGoroutine, -1)
 
 }

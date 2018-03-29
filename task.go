@@ -1,7 +1,6 @@
 package o3e
 
 import (
-    "sync"
     "sync/atomic"
 )
 
@@ -14,12 +13,13 @@ type Task interface {
 
 type taskWrap struct {
     Task
-    deps      map[int]bool //memoizatiojn
+    deps   map[int]bool //memoizatiojn
     waitCount int32
-    wait      sync.WaitGroup
+    doneCh chan bool
+    stopCh chan bool
 }
 
-func newTaskWrap(t Task) *taskWrap {
+func newTaskWrap(t Task, stopCh chan bool) *taskWrap {
 
     deps := t.DepFactors()
 
@@ -27,10 +27,9 @@ func newTaskWrap(t Task) *taskWrap {
         t,
         deps,
         int32(len(deps)),
-        sync.WaitGroup{},
+        make(chan bool, len(deps)),
+        stopCh,
     }
-
-    result.wait.Add(1)
 
     return result
 
@@ -38,9 +37,18 @@ func newTaskWrap(t Task) *taskWrap {
 
 func (w *taskWrap) execute() {
     if atomic.AddInt32(&w.waitCount, -1) != 0 {
-        w.wait.Wait()
+        select {
+        case <-w.stopCh:
+        case <-w.doneCh:
+        }
     } else {
-        defer w.wait.Done()
-        w.Execute() // TODO error handling
+        defer w.done()
+        w.Execute()
+    }
+}
+
+func (w *taskWrap) done() {
+    for i:=0; i<len(w.deps) - 1; i++ {
+        w.doneCh <- true
     }
 }
