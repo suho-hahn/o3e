@@ -7,6 +7,7 @@ import (
 )
 
 type wrapperResult uint8
+type Void bool
 
 const (
     wrapperSuccess wrapperResult = iota
@@ -15,13 +16,12 @@ const (
 )
 
 type Task interface {
-    DepFactors() map[int]bool
+    DepFactors() map[int]Void // memoization may improve performance.
     Execute()
 }
 
 type taskWrappper struct {
     Task
-    deps   map[int]bool //memoizatiojn
     waitCount int32
 }
 
@@ -31,7 +31,6 @@ func newTaskWrapper(t Task) *taskWrappper {
 
     result := &taskWrappper{
         t,
-        deps,
         int32(len(deps)),
     }
 

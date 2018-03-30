@@ -5,14 +5,14 @@ import (
 )
 
 type PrintTask struct {
-    Deps      map[int]bool
+    Deps      map[int]Void
     Str       string
     ExecCount int
     Test      *testing.T
     isError   bool
 }
 
-func (t *PrintTask) DepFactors() map[int]bool {
+func (t *PrintTask) DepFactors() map[int]Void {
     return t.Deps
 }
 

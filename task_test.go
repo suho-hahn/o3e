@@ -9,7 +9,7 @@ func TestTaskWrap_NormalExecution(t *testing.T) {
     t.Log(t.Name())
 
     task := &PrintTask{
-        map[int]bool{1:false, 2:false, 3:false},
+        map[int]Void{1:false, 2:false, 3:false},
         "PrintTask is working",
         0,
         t,
@@ -51,7 +51,7 @@ func TestTaskWrap_Error(t *testing.T) {
     t.Log(t.Name())
 
     task := &PrintTask{
-        map[int]bool{1:false, 2:false, 3:false},
+        map[int]Void{1:false, 2:false, 3:false},
         "PrintTask is working",
         0,
         t,
