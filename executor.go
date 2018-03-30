@@ -28,8 +28,7 @@ func NewExecutor(numOfChannels, channelCapacity int) *Executor {
 func (e *Executor) Start() {
 
     for i := range e.channels {
-        go e.handleQueueAsync(i)
-        atomic.AddInt32(&e.numGoroutine, 1)
+        go e.handleChannel(i)
     }
 }
 
@@ -42,35 +41,62 @@ func (e *Executor) AddTask(t Task) {
 
     wrap := newTaskWrapper(t)
 
-    for depFactor := range wrap.deps {
+    deps := wrap.DepFactors()
+    for depFactor := range deps {
         e.channels[depFactor % len(e.channels)] <- wrap
     }
 
 }
 
-func (e *Executor) handleQueueAsync(chIdx int) {
+func (e *Executor) handleChannel(chIdx int) {
+
+    atomic.AddInt32(&e.numGoroutine, 1)
+    defer atomic.AddInt32(&e.numGoroutine, -1)
 
     ch := e.channels[chIdx]
 
-    for {
+    LOOP: for {
 
+        // check stop
         select {
-        case <- e.stopCh:
-            goto STOP
-        default:
+        case <- e.stopCh: break LOOP
+        default: // DO NOTHING
         }
 
+        // execute or stop
         select {
-        case wrap := <- ch:
-            wrap.execute()
-        case <- e.stopCh:
-            e.stopCh <- true
-            goto STOP
+        case wrap := <- ch: e.executeTaskWrapper(wrap)
+        case <- e.stopCh: break LOOP
         }
 
     }
 
-    STOP:
-    atomic.AddInt32(&e.numGoroutine, -1)
+    //e.Stop()
 
+}
+
+func (e *Executor) executeTaskWrapper(wrap *taskWrapper) {
+    result, err := wrap.execute()
+    execResultHandlers[result](e, wrap, err)
+}
+
+var execResultHandlers = []func(*Executor, *taskWrapper, error) {
+    handleResultSuccess,
+    handleResultWait,
+    handleResultError,
+}
+
+func handleResultSuccess(e *Executor, wrap *taskWrapper, _ error) {
+    // TODO not implemented yet
+}
+
+func handleResultWait(e *Executor, wrap *taskWrapper, _ error) {
+    // TODO not implemented yet
+}
+
+func handleResultError(e *Executor, wrap *taskWrapper, _ error) {
+    // TODO not implemented yet
+
+    // TODO Pass Error
+    //e.Stop()
 }
