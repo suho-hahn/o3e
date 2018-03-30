@@ -22,7 +22,7 @@ type Task interface {
 
 type taskWrapper struct {
     Task
-    waitCount int32
+    blockCount int32
 }
 
 func newTaskWrapper(t Task) *taskWrapper {
@@ -49,7 +49,7 @@ func (w *taskWrapper) execute() (result wrapperResult, err error) {
         }
     }()
 
-    if atomic.AddInt32(&w.waitCount, -1) == 0 {
+    if atomic.AddInt32(&w.blockCount, -1) == 0 {
         w.Execute()
         return wrapperSuccess, nil
     } else {
