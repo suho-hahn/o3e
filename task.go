@@ -20,16 +20,16 @@ type Task interface {
     Execute()
 }
 
-type taskWrappper struct {
+type taskWrapper struct {
     Task
     waitCount int32
 }
 
-func newTaskWrapper(t Task) *taskWrappper {
+func newTaskWrapper(t Task) *taskWrapper {
 
     deps := t.DepFactors()
 
-    result := &taskWrappper{
+    result := &taskWrapper{
         t,
         int32(len(deps)),
     }
@@ -38,7 +38,7 @@ func newTaskWrapper(t Task) *taskWrappper {
 
 }
 
-func (w *taskWrappper) execute() (result wrapperResult, err error) {
+func (w *taskWrapper) execute() (result wrapperResult, err error) {
 
     defer func() {
         rec := recover()

@@ -5,16 +5,16 @@ import (
 )
 
 type Executor struct {
-    channels []chan *taskWrappper
+    channels []chan *taskWrapper
     stopCh   chan bool
     numGoroutine int32
 }
 
 func NewExecutor(numOfChannels, channelCapacity int) *Executor {
 
-    channels := make([]chan *taskWrappper, numOfChannels)
+    channels := make([]chan *taskWrapper, numOfChannels)
     for i := range channels {
-        channels[i] = make(chan *taskWrappper, channelCapacity)
+        channels[i] = make(chan *taskWrapper, channelCapacity)
     }
 
     return &Executor {
