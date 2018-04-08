@@ -2,6 +2,7 @@ package o3e
 
 import (
     "sync/atomic"
+    "log"
 )
 
 type Executor struct {
@@ -19,7 +20,7 @@ func NewExecutor(numOfChannels, channelCapacity int) *Executor {
 
     return &Executor {
         channels,
-        make(chan bool),
+        make(chan bool, numOfChannels),
         0,
     }
 
@@ -33,7 +34,14 @@ func (e *Executor) Start() {
 }
 
 func (e *Executor) Stop() {
-    e.stopCh <- true
+    LOOP: for {
+        select {
+        case e.stopCh <- true:
+        default:
+            break LOOP
+        }
+    }
+
 }
 
 // Thread **UNSAFE**
@@ -65,38 +73,28 @@ func (e *Executor) handleChannel(chIdx int) {
 
         // execute or stop
         select {
-        case wrap := <- ch: e.executeTaskWrapper(wrap)
         case <- e.stopCh: break LOOP
+        case wrap := <- ch:
+
+            result, err := wrap.execute()
+            if result == wrapperWait {
+                isSuccess := <- wrap.successCh // wait result
+                wrap.successCh <- isSuccess
+                if ! isSuccess {
+                    break LOOP // stop
+                }
+            } else if result == wrapperSuccess {
+                wrap.successCh <- true
+            } else { // wrapperError
+                wrap.successCh <- false
+                log.Print(err) // FIXME
+                break LOOP
+            }
+
         }
 
     }
 
-    //e.Stop()
+    e.Stop()
 
-}
-
-func (e *Executor) executeTaskWrapper(wrap *taskWrapper) {
-    result, err := wrap.execute()
-    execResultHandlers[result](e, wrap, err)
-}
-
-var execResultHandlers = []func(*Executor, *taskWrapper, error) {
-    handleResultSuccess,
-    handleResultWait,
-    handleResultError,
-}
-
-func handleResultSuccess(e *Executor, wrap *taskWrapper, _ error) {
-    // TODO not implemented yet
-}
-
-func handleResultWait(e *Executor, wrap *taskWrapper, _ error) {
-    // TODO not implemented yet
-}
-
-func handleResultError(e *Executor, wrap *taskWrapper, _ error) {
-    // TODO not implemented yet
-
-    // TODO Pass Error
-    //e.Stop()
 }
