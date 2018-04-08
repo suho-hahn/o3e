@@ -17,12 +17,15 @@ const (
 
 type Task interface {
     DepFactors() map[int]Void // memoization may improve performance.
-    Execute()
+    Execute() error
+    // TODO Commit
+    // TODO Rollback()
 }
 
 type taskWrapper struct {
     Task
     blockCount int32
+    successCh chan bool
 }
 
 func newTaskWrapper(t Task) *taskWrapper {
@@ -32,6 +35,7 @@ func newTaskWrapper(t Task) *taskWrapper {
     result := &taskWrapper{
         t,
         int32(len(deps)),
+        make(chan bool),
     }
 
     return result
@@ -50,8 +54,12 @@ func (w *taskWrapper) execute() (result wrapperResult, err error) {
     }()
 
     if atomic.AddInt32(&w.blockCount, -1) == 0 {
-        w.Execute()
-        return wrapperSuccess, nil
+        err = w.Execute()
+        if err != nil {
+            return wrapperError, err
+        } else {
+            return wrapperSuccess, nil
+        }
     } else {
         return wrapperWait, nil
     }

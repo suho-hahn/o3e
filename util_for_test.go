@@ -2,6 +2,7 @@ package o3e
 
 import (
     "testing"
+    "errors"
 )
 
 type PrintTask struct {
@@ -9,6 +10,7 @@ type PrintTask struct {
     Str       string
     ExecCount int
     Test      *testing.T
+    isPanic   bool
     isError   bool
 }
 
@@ -16,14 +18,20 @@ func (t *PrintTask) DepFactors() map[int]Void {
     return t.Deps
 }
 
-func (t *PrintTask) Execute() {
+func (t *PrintTask) Execute() error {
+
+    if t.isPanic {
+        panic("make panic")
+    }
 
     if t.isError {
-        panic("make error")
+        return errors.New("make error")
     }
 
     t.Test.Log(t.Str)
     t.ExecCount ++
+
+    return nil
 }
 
 
