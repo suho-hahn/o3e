@@ -7,7 +7,8 @@ import (
 )
 
 type wrapperResult uint8
-type Void bool
+type EmptyType struct{}
+var Empty = EmptyType{}
 
 const (
     wrapperSuccess wrapperResult = iota
@@ -16,7 +17,7 @@ const (
 )
 
 type Task interface {
-    DepFactors() map[int]Void // memoization may improve performance.
+    DepFactors() map[int]EmptyType // memoization may improve performance.
     Execute() error
     // TODO Commit
     // TODO Rollback()

@@ -7,7 +7,7 @@ import (
 )
 
 type PrintTask struct {
-    Deps      map[int]Void
+    Deps      map[int]EmptyType
     Str       string
     ExecCount int
     Test      *testing.T
@@ -15,7 +15,7 @@ type PrintTask struct {
     isError   bool
 }
 
-func (t *PrintTask) DepFactors() map[int]Void {
+func (t *PrintTask) DepFactors() map[int]EmptyType {
     return t.Deps
 }
 
@@ -40,7 +40,7 @@ func TestTaskWrap_NormalExecution(t *testing.T) {
     t.Log(t.Name())
 
     task := &PrintTask{
-        map[int]Void{1:false, 2:false, 3:false},
+        map[int]EmptyType{1:Empty, 2:Empty, 3:Empty},
         "PrintTask is working",
         0,
         t,
@@ -83,7 +83,7 @@ func TestTaskWrap_Panic(t *testing.T) {
     t.Log(t.Name())
 
     task := &PrintTask{
-        map[int]Void{1:false, 2:false, 3:false},
+        map[int]EmptyType{1:Empty, 2:Empty, 3:Empty},
         "PrintTask is working",
         0,
         t,
@@ -126,7 +126,7 @@ func TestTaskWrap_Error(t *testing.T) {
     t.Log(t.Name())
 
     task := &PrintTask{
-        map[int]Void{1:false, 2:false, 3:false},
+        map[int]EmptyType{1:Empty, 2:Empty, 3:Empty},
         "PrintTask is working",
         0,
         t,

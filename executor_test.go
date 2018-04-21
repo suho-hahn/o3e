@@ -16,9 +16,9 @@ type SleepTask struct {
     Dependency int
 }
 
-func (t *SleepTask) DepFactors() map[int]Void {
-    deps := make(map[int]Void)
-    deps[t.Dependency] = true
+func (t *SleepTask) DepFactors() map[int]EmptyType {
+    deps := make(map[int]EmptyType)
+    deps[t.Dependency] = Empty
     return deps
 }
 
