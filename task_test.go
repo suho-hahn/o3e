@@ -3,7 +3,37 @@ package o3e
 import (
     "testing"
     "fmt"
+    "errors"
 )
+
+type PrintTask struct {
+    Deps      map[int]Void
+    Str       string
+    ExecCount int
+    Test      *testing.T
+    isPanic   bool
+    isError   bool
+}
+
+func (t *PrintTask) DepFactors() map[int]Void {
+    return t.Deps
+}
+
+func (t *PrintTask) Execute() error {
+
+    if t.isPanic {
+        panic("make panic")
+    }
+
+    if t.isError {
+        return errors.New("make error")
+    }
+
+    t.Test.Log(t.Str)
+    t.ExecCount ++
+
+    return nil
+}
 
 func TestTaskWrap_NormalExecution(t *testing.T) {
 

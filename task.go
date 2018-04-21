@@ -35,7 +35,7 @@ func newTaskWrapper(t Task) *taskWrapper {
     result := &taskWrapper{
         t,
         int32(len(deps)),
-        make(chan bool),
+        make(chan bool, 1),
     }
 
     return result
